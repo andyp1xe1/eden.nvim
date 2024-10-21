@@ -2,14 +2,14 @@ package main
 
 import (
 	"bufio"
+	ev "garden/eventhub"
 	"log"
 	"net"
 	"os"
 )
 
-
 type SocketHandler struct {
-	path string
+	path    string
 	msgChan chan string
 }
 
@@ -45,8 +45,12 @@ func (s SocketHandler) Listen() {
 				log.Println("Error reading from socket:", err)
 			}
 		}()
+
+		for msg := range s.msgChan {
+			if e := ev.ParseToEvent(msg); e.EventType != ev.EventNotValid {
+				ev.Hub.Trigger(e)
+			}
+		}
+
 	}
 }
-
-
-

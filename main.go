@@ -1,56 +1,93 @@
 package main
 
 import (
+	"bytes"
 	"log"
-	"net/http"
+
+	"garden/appview"
+	p "garden/nvim"
+
+	vim "github.com/neovim/go-client/nvim"
+	"github.com/yuin/goldmark"
 )
 
-type FileServer struct {
-    notesDir string
-    port string
-}
-
-func NewFileServer(dir, port string) FileServer {
-    return FileServer{dir, port}
-}
-
-func (f FileServer) Serve() {
-	fs := http.FileServer(http.Dir(f.notesDir))
-	mux := http.NewServeMux()
-	mux.Handle("/notes/", http.StripPrefix("/notes", fs))
-
-	log.Println("Serving on http://localhost+"+f.port)
-	if err := http.ListenAndServe(f.port, mux); err != nil {
-		log.Fatal(err)
-	}
+type Handler struct {
+	appview.AppView
 }
 
 func main() {
-  sockHandler := NewSocketHandler("/tmp/garden.sock")
-  go sockHandler.Listen()
+	log.SetFlags(0)
 
-  fileServer := NewFileServer("/var/www/notes/", ":8080")
-  go fileServer.Serve()
+	app := appview.Setup(
+		true,
+		"Markdown Preview",
+	)
 
-  appView := NewAppView(
-      false,
-      "Digital Garden",
-      fileServer.notesDir+fileServer.port,
-  )
-  defer appView.Destroy()
-  appView.Init()
+	handler := Handler{app}
 
-  go func(){
-      for msg := range sockHandler.msgChan {
-        if cmd, err := parseCommand(msg); err != nil {
-    		    log.Println("parsing cmd failed:", msg)
-        } else {
-            appView.Dispatch(func() {
-                appView.Eval(JsTable[cmd.Action]) 
-            })
-        }
-      }
-  }()
-  
-  appView.Run()
+	go handler.serve()
+
+	app.Run()
+}
+
+func (h Handler) serve() {
+	plugin, err := p.Setup(p.Conf{
+		Name: "Markdown Preview",
+		Handlers: p.HandlerMap{
+			"text_changed": h.onTextChanged,
+			"scroll":       h.onScroll,
+			"enter":        h.onBufEnter,
+		},
+	})
+	if err != nil {
+		panic(err)
+	}
+	if err := plugin.Serve(); err != nil {
+		panic(err)
+	}
+}
+
+func (h Handler) onScroll(v *vim.Nvim) error {
+	vec, err := v.WindowCursor(0)
+	if err != nil {
+		return err
+	}
+
+	height, err := v.BufferLineCount(0)
+	if err != nil {
+		return err
+	}
+
+	yCoord := vec[0]
+
+	h.ScrollCh() <- int((float64(yCoord)/float64(height))*100) - 25
+
+	return nil
+}
+func (h Handler) onBufEnter(v *vim.Nvim) error { return nil }
+
+func (h Handler) onTextChanged(v *vim.Nvim) error {
+	buf, err := v.CurrentBuffer()
+	if err != nil {
+		return err
+	}
+	lines, err := v.BufferLines(buf, 0, -1, true)
+	if err != nil {
+		return err
+	}
+	h.DocChangedCh() <- parseLines(lines)
+	return nil
+}
+
+func parseLines(lines [][]byte) string {
+	var buf bytes.Buffer
+	var htmlBuf bytes.Buffer
+	for i, line := range lines {
+		buf.Write(line)
+		if i < len(lines)-1 {
+			buf.WriteByte('\n')
+		}
+	}
+	goldmark.Convert(buf.Bytes(), &htmlBuf)
+	return htmlBuf.String()
 }
