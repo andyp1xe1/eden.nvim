@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 
 	"garden/appview"
@@ -9,6 +10,10 @@ import (
 
 	vim "github.com/neovim/go-client/nvim"
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark-meta"
+	"github.com/yuin/goldmark/extension"
+	"github.com/yuin/goldmark/parser"
+	"go.abhg.dev/goldmark/wikilink"
 )
 
 type Handler struct {
@@ -27,6 +32,7 @@ func main() {
 
 	go handler.serve()
 
+	app.LoadDom()
 	app.Run()
 }
 
@@ -60,7 +66,7 @@ func (h Handler) onScroll(v *vim.Nvim) error {
 
 	yCoord := vec[0]
 
-	h.ScrollCh() <- int((float64(yCoord)/float64(height))*100) - 25
+	h.ScrollCh() <- int((float64(yCoord) / float64(height)) * 100)
 
 	return nil
 }
@@ -88,6 +94,30 @@ func parseLines(lines [][]byte) string {
 			buf.WriteByte('\n')
 		}
 	}
-	goldmark.Convert(buf.Bytes(), &htmlBuf)
-	return htmlBuf.String()
+	md := goldmark.New(
+		goldmark.WithExtensions(
+			meta.Meta,
+			extension.GFM,
+			extension.Table,
+			extension.Typographer,
+			extension.Strikethrough,
+			extension.Footnote,
+			&wikilink.Extender{},
+		),
+		goldmark.WithParserOptions(
+			parser.WithAutoHeadingID(),
+		),
+	)
+	ctx := parser.NewContext()
+	if err := md.Convert(buf.Bytes(), &htmlBuf, parser.WithContext(ctx)); err != nil {
+		return fmt.Sprintf(`<h1>Error</h1>
+<pre>%v</pre>
+`, err.Error())
+	}
+	metadata := meta.Get(ctx)
+	if title, ok := metadata["title"]; !ok {
+		return htmlBuf.String()
+	} else {
+		return fmt.Sprintf(`<h1 styles="margin: 0 auto; width: fit-content;" >%s<h1>%s`, title, &htmlBuf)
+	}
 }
