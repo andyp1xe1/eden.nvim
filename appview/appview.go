@@ -10,9 +10,10 @@ import (
 
 type AppView interface {
 	Run()
+	Destroy()
+	LoadDom()
 	DocChangedCh() chan<- string
 	ScrollCh() chan<- int
-	LoadDom()
 }
 
 type appView struct {
@@ -22,7 +23,7 @@ type appView struct {
 	scrollCh     chan int
 }
 
-func Setup(debug bool, title string) *appView {
+func Setup(debug bool, title string) AppView {
 	app := &appView{
 		WebView:      web.New(debug),
 		title:        title,
@@ -35,6 +36,7 @@ func Setup(debug bool, title string) *appView {
 
 func (a *appView) LoadDom() {
 	a.SetTitle(a.title)
+
 	a.SetHtml(fmt.Sprintf(`<!DOCTYPE html>
 <html>
 <head>
@@ -42,7 +44,9 @@ func (a *appView) LoadDom() {
 <title>Previewer</title>
 </head>
 <style>%s</style>
-<body>%s</body>
+<body>
+<main>%s</main>
+</body>
 </html>`, style, <-a.docChangedCh))
 }
 
@@ -58,9 +62,9 @@ func (a *appView) Run() {
 	go func() {
 		for num := range a.scrollCh {
 			js := fmt.Sprintf(`requestAnimationFrame(function () {
-	percentage = (%v/100) * document.body.scrollHeight - 50
+	dy = (%v/100) * document.body.scrollHeight - (window.innerHeight/3)
 	window.scrollTo({
-		top: percentage,
+		top: dy,
 		behavior: "smooth"
 	})})`, num)
 			log.Println(js)
@@ -75,7 +79,7 @@ func (a *appView) Run() {
 				quoted := strconv.Quote(val)
 				a.Eval(
 					fmt.Sprintf(`requestAnimationFrame(function () {
-document.getElementsByTagName('body')[0].innerHTML = %s
+document.getElementsByTagName('main')[0].innerHTML = %s
 })`, quoted))
 			})
 		}
@@ -83,15 +87,14 @@ document.getElementsByTagName('body')[0].innerHTML = %s
 	a.WebView.Run()
 }
 
+// TODO move to a proper css file, read the file
 const style = `
 /* Global variables. */
 :root,
 ::backdrop {
   /* Set sans-serif & mono fonts */
-  --sans-font: -apple-system, BlinkMacSystemFont, "Avenir Next", Avenir,
-    "Nimbus Sans L", Roboto, "Noto Sans", "Segoe UI", Arial, Helvetica,
-    "Helvetica Neue", sans-serif;
-  --mono-font: "Fantasque Sans Mono", Consolas, Menlo, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+  --sans-font: "Noto Sans", sans-serif;
+  --mono-font: "Fantasque Sans Mono", monospace;
   --standard-border-radius: 5px;
 
   /* Gruvbox Light theme */
@@ -149,23 +152,23 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Make the body a nice central block */
 body {
+  display: flex;
+  justify-content: center;
   color: var(--text);
   background-color: var(--bg);
   font-size: 1.15rem;
   line-height: 1.5;
-  display: grid;
-  grid-template-columns: 1fr min(45rem, 90%) 1fr;
-  grid-template-rows: min-content 1fr auto;
   margin: 0;
-}
-body > * {
-  grid-column: 2;
+  min-height: 100vh;
+  padding: 2rem 0;
 }
 
-main {
-  padding-top: 1.5rem;
+body > main {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+  padding: 0 1.5rem;
 }
 
 body > footer {
@@ -178,26 +181,31 @@ body > footer {
 }
 
 /* Format headers */
+.title {
+	text-align: center;
+}
+
 h1 {
   font-size: 3rem;
 }
 
 h2 {
-  font-size: 2.6rem;
-  margin-top: 3rem;
+  font-size: 2.5rem;
 }
 
 h3 {
-  font-size: 2rem;
-  margin-top: 3rem;
+  font-size: 1.7rem;
+  padding: 0.5em;
 }
 
 h4 {
   font-size: 1.44rem;
+  padding: 0.5em;
 }
 
 h5 {
   font-size: 1.15rem;
+  padding: 0.5em;
 }
 
 h6 {
@@ -206,11 +214,11 @@ h6 {
 
 p {
 	margin: 0;
-  padding: 1.5rem 0;
 }
 
-/* Prevent long strings from overflowing container */
-p, h1, h2, h3, h4, h5, h6 {
+h1, h2, h3, h4, h5, h6 {
+	margin:0;
+  padding: 0.5em 0;
   overflow-wrap: break-word;
 }
 
@@ -219,25 +227,6 @@ h1,
 h2,
 h3 {
   line-height: 1.1;
-}
-
-/* Reduce header size on mobile */
-@media only screen and (max-width: 720px) {
-  h1 {
-    font-size: 2.5rem;
-  }
-
-  h2 {
-    font-size: 2.1rem;
-  }
-
-  h3 {
-    font-size: 1.75rem;
-  }
-
-  h4 {
-    font-size: 1.25rem;
-  }
 }
 
 /* Format links*/
@@ -249,6 +238,36 @@ a:visited {
 
 a:hover {
   text-decoration: none;
+}
+
+/*Format tags*/
+ul.tags {
+  list-style: none;
+	padding: 0;
+  margin: 0;
+  display: flex;
+	justify-content: center;
+	gap: 1rem;
+  flex-wrap: wrap;
+}
+
+ul.tags li {
+  background-color: var(--accent-bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 0.7rem;
+  font-family: var(--sans-font);
+  font-size: 0.9rem;
+	line-height: 0.9;
+}
+
+ul.tags li a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+ul.tags li a:hover {
+  color: var(--accent-hover);
 }
 
 /* Format tables */
@@ -335,7 +354,7 @@ blockquote {
 	border: 1px solid var(--border);
 
   border-left: 0.5rem solid var(--accent);
-  padding: 0.3rem 1rem;
+  padding: 0.5rem 1rem;
   
   /*border-radius: var(--standard-border-radius);*/
   color: var(--text-light);
@@ -376,8 +395,8 @@ pre {
   background-color: var(--code-bg);
   white-space: pre;
   tab-size: 2;
-  margin: 1rem 0;
   padding: 1rem;
+	margin:0;
   font-size: 1rem;
   line-height: 1.4;
   color: var(--preformatted);

@@ -31,9 +31,10 @@ func main() {
 	handler := Handler{app}
 
 	go handler.serve()
-
 	app.LoadDom()
+
 	app.Run()
+	app.Destroy()
 }
 
 func (h Handler) serve() {
@@ -70,6 +71,8 @@ func (h Handler) onScroll(v *vim.Nvim) error {
 
 	return nil
 }
+
+// This thing is here just in case I may need it in the future
 func (h Handler) onBufEnter(v *vim.Nvim) error { return nil }
 
 func (h Handler) onTextChanged(v *vim.Nvim) error {
@@ -85,15 +88,21 @@ func (h Handler) onTextChanged(v *vim.Nvim) error {
 	return nil
 }
 
+// TODO:
+// - move in another file or package?
+// - insdead of appending html make an extension for goldmark?
+// - resolve the links to something meaingfull
 func parseLines(lines [][]byte) string {
 	var buf bytes.Buffer
 	var htmlBuf bytes.Buffer
+
 	for i, line := range lines {
 		buf.Write(line)
 		if i < len(lines)-1 {
 			buf.WriteByte('\n')
 		}
 	}
+
 	md := goldmark.New(
 		goldmark.WithExtensions(
 			meta.Meta,
@@ -108,16 +117,48 @@ func parseLines(lines [][]byte) string {
 			parser.WithAutoHeadingID(),
 		),
 	)
+
 	ctx := parser.NewContext()
-	if err := md.Convert(buf.Bytes(), &htmlBuf, parser.WithContext(ctx)); err != nil {
+
+	err := md.Convert(
+		buf.Bytes(),
+		&htmlBuf,
+		parser.WithContext(ctx))
+
+	if err != nil {
 		return fmt.Sprintf(`<h1>Error</h1>
-<pre>%v</pre>
-`, err.Error())
+<pre>%v</pre>`, err.Error())
 	}
+
+	var front string
 	metadata := meta.Get(ctx)
-	if title, ok := metadata["title"]; !ok {
-		return htmlBuf.String()
-	} else {
-		return fmt.Sprintf(`<h1 styles="margin: 0 auto; width: fit-content;" >%s<h1>%s`, title, &htmlBuf)
+	if title, ok := metadata["title"]; ok {
+		front += fmtTitle(title)
 	}
+	if tags, ok := metadata["tags"]; ok {
+		front += fmtTags(tags)
+	}
+	return front + "\n" + htmlBuf.String()
+}
+
+func fmtTitle(title interface{}) string {
+	var html string
+	if str, ok := title.(string); ok {
+		html = fmt.Sprintf(
+			`<h1 class="title">%s</h1>`, str)
+	}
+	return html
+}
+
+func fmtTags(tags interface{}) string {
+	var html string
+	if list, ok := tags.([]interface{}); ok {
+		for _, li := range list {
+			html += fmt.Sprintf(
+				`<li><a href="#">#%s</a></li>`, li)
+		}
+		return fmt.Sprintf(
+			`<ul class="tags" >%s</ul>`, html)
+	}
+	return html
 }
