@@ -8,8 +8,10 @@ import (
 	"garden/appview"
 	p "garden/nvim"
 
+	chromahtml "github.com/alecthomas/chroma/v2/formatters/html"
 	vim "github.com/neovim/go-client/nvim"
 	"github.com/yuin/goldmark"
+	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	"github.com/yuin/goldmark-meta"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
@@ -112,6 +114,12 @@ func parseLines(lines [][]byte) string {
 			extension.Strikethrough,
 			extension.Footnote,
 			&wikilink.Extender{},
+			highlighting.NewHighlighting(
+				highlighting.WithStyle("gruvbox"),
+				highlighting.WithFormatOptions(
+					chromahtml.WithLineNumbers(true),
+				),
+			),
 		),
 		goldmark.WithParserOptions(
 			parser.WithAutoHeadingID(),

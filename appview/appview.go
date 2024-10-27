@@ -62,7 +62,7 @@ func (a *appView) Run() {
 	go func() {
 		for num := range a.scrollCh {
 			js := fmt.Sprintf(`requestAnimationFrame(function () {
-	dy = (%v/100) * document.body.scrollHeight - (window.innerHeight/3)
+	dy = (%v/100) * document.body.scrollHeight - (window.innerHeight*0.25)
 	window.scrollTo({
 		top: dy,
 		behavior: "smooth"
@@ -137,9 +137,9 @@ const style = `
   }
 }
 
-/* Reset box-sizing */
 *, *::before, *::after {
   box-sizing: border-box;
+	margin: 0;
 }
 
 html, body {
@@ -171,40 +171,32 @@ body > main {
   padding: 0 1.5rem;
 }
 
-body > footer {
-  margin-top: 4rem;
-  padding: 2rem 1rem;
-  color: var(--text-light);
-  font-size: 0.9rem;
-  text-align: center;
-  border-top: 1px solid var(--border);
-}
-
 /* Format headers */
 .title {
+	font-size: 3rem;
 	text-align: center;
 }
 
 h1 {
-  font-size: 3rem;
-}
-
-h2 {
   font-size: 2.5rem;
 }
 
+h2 {
+  font-size: 1.75rem;
+}
+
 h3 {
-  font-size: 1.7rem;
+  font-size: 1.25rem;
   padding: 0.5em;
 }
 
 h4 {
-  font-size: 1.44rem;
+  font-size: 1.15rem;
   padding: 0.5em;
 }
 
 h5 {
-  font-size: 1.15rem;
+  font-size: 1rem;
   padding: 0.5em;
 }
 
@@ -218,7 +210,7 @@ p {
 
 h1, h2, h3, h4, h5, h6 {
 	margin:0;
-  padding: 0.5em 0;
+  padding: 0.25em 0;
   overflow-wrap: break-word;
 }
 
