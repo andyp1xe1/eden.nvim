@@ -167,8 +167,9 @@ body {
 body > main {
 	display: flex;
 	flex-direction: column;
+	width: 100%;
 	gap: 1.5rem;
-  padding: 0 1.5rem;
+  padding: 0 2rem;
 }
 
 /* Format headers */
