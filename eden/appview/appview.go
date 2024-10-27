@@ -61,12 +61,12 @@ func (a *appView) ScrollCh() chan<- int {
 func (a *appView) Run() {
 	go func() {
 		for num := range a.scrollCh {
-			js := fmt.Sprintf(`requestAnimationFrame(function () {
-	dy = (%v/100) * document.body.scrollHeight - (window.innerHeight*0.25)
-	window.scrollTo({
-		top: dy,
-		behavior: "smooth"
-	})})`, num)
+			js := fmt.Sprintf(
+				`dy = (%v/100) * document.body.scrollHeight - (window.innerHeight*0.25)
+window.scrollTo({
+	top: dy,
+	behavior: "smooth"
+});`, num)
 			log.Println(js)
 			a.Dispatch(func() {
 				a.Eval(js)
@@ -78,9 +78,9 @@ func (a *appView) Run() {
 			a.Dispatch(func() {
 				quoted := strconv.Quote(val)
 				a.Eval(
-					fmt.Sprintf(`requestAnimationFrame(function () {
-document.getElementsByTagName('main')[0].innerHTML = %s
-})`, quoted))
+					fmt.Sprintf(
+						`document.getElementsByTagName('main')[0].innerHTML = %s`,
+						quoted))
 			})
 		}
 	}()
