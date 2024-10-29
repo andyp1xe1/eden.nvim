@@ -4,6 +4,14 @@ A makrdown previewer for your digital garden. *In neovim ofcourse.*
 
 ## Installation
 
+- install `webkit2gtk` with your package manager
+- have go installed
+- configure the path so binary is recognized (in `.bashrc` or similar)
+```sh
+export GOPATH=$HOME/go # you may change this path
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+```
+
 ### packer
 
 ```lua
