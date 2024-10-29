@@ -1,2 +1,2 @@
 all:
-	@cd ./eden/; go install
+	@cd ./eden/;go mod download; go install
