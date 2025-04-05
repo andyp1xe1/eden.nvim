@@ -96,7 +96,6 @@ func (a *AppView) loadDom() {
 	a.SetHtml(fmt.Sprintf(`<!DOCTYPE html>
 <html>
 <head>
-<!-- <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">-->
 <title>Previewer</title>
 </head>
 <style>%s</style>
@@ -132,4 +131,5 @@ func updateHTML(a *AppView, html string) {
 			`document.getElementsByTagName('main')[0].innerHTML = %s`,
 			quoted))
 	a.Eval(wikiEventListeners)
+	// a.Eval(`renderMathInElement(document.body)`)
 }
