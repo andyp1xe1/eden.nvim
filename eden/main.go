@@ -11,7 +11,7 @@ func main() {
 
 	app := appview.MakeAppView(
 		true,
-		"Markdown Preview",
+		Name,
 	)
 
 	server := MakeServer(app.EvenHub())

@@ -83,7 +83,7 @@ func parseLines(lines [][]byte) string {
 	if tags, ok := metadata["tags"]; ok {
 		front += fmtTags(tags)
 	}
-	return front + "\n" + htmlBuf.String()
+	return front + "\n" + prevHeader + "\n" + htmlBuf.String()
 }
 
 func fmtTitle(title interface{}) string {
@@ -100,7 +100,7 @@ func fmtTags(tags interface{}) string {
 	if list, ok := tags.([]interface{}); ok {
 		for _, li := range list {
 			html += fmt.Sprintf(
-				`<li><a href="#">#%s</a></li>`, li)
+				`<li><a href="__tag#%s">#%s</a></li>`, li, li)
 		}
 		return fmt.Sprintf(
 			`<ul class="tags" >%s</ul>`, html)

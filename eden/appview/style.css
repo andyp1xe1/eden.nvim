@@ -40,10 +40,10 @@
     --disabled: #504945; /* dark disabled state */
   }
   /* Add a bit of transparency so light media isn't so glaring in dark mode */
-  img,
+  /*img,
   video {
     opacity: 0.8;
-  }
+  }*/
 }
 
 *, *::before, *::after {
@@ -52,7 +52,7 @@
 }
 
 html, body {
-  height: 100%;
+  min-height: 100%;
 }
 
 html {

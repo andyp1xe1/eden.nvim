@@ -8,6 +8,7 @@ A makrdown previewer for your digital garden.
 - install `webkit2gtk` with your package manager
 - have go installed
 - configure the path so binary is recognized (in `.bashrc` or similar)
+
 ```sh
 export GOPATH=$HOME/go # you may change this path
 export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
@@ -37,8 +38,6 @@ use {
 }
 ```
 
-
-
 ### others
 
 ~~TODO~~ You're smart, you can figure it out :3
@@ -61,7 +60,7 @@ use {
 - [ ] access to offline media (images, etc)
 - [ ] obsidian callouts
 - [ ] latex support
-- [ ] lua configuration options (custom styling and behavior)
+- [ ] lua configuration options (custom styling and behavior) + external css support
 - [ ] markdown formatter (something that uses goldmark)
 
 --- 

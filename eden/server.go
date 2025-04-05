@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 
 	nvim "github.com/andyp1xe1/eden.nvim/eden/nvim"
 	vim "github.com/neovim/go-client/nvim"
@@ -38,7 +39,7 @@ func MakeServer(hub EventHub) *PluginServer {
 func (s PluginServer) Serve() {
 	var err error
 	if s.plugin, err = nvim.Setup(nvim.Conf{
-		Name: "Markdown Preview",
+		Name: Name,
 		Handlers: nvim.HandlerMap{
 			"text_changed": Handler(s.hub, onTextChanged),
 			"scroll":       Handler(s.hub, onScroll),
@@ -69,11 +70,21 @@ func clickWiki(v *vim.Nvim, target string) {
 	target, err := url.PathUnescape(target)
 	if err != nil {
 		v.WritelnErr("Error: " + err.Error())
+		return
 	}
-	v.Command("let @/ = ''")
-	v.Command(fmt.Sprintf(`call search('\[\[%s')`, target))
-	v.Command(`normal gd`)
-	// v.Command(`nohlsearch|redraw`)
+
+	switch {
+	case len(target) == 0:
+		return
+	case target == prevURL:
+		v.Command(`execute "normal! \<C-t>"`)
+	case strings.HasPrefix(target, "__tag"):
+		v.WriteOut(strings.TrimPrefix(target, "__tag") + "\n")
+	default:
+		v.Command(`let @/ = ''`)
+		v.Command(fmt.Sprintf(`call search('\[\[%s')`, target))
+		v.Command(`normal gd`)
+	}
 }
 
 func onScroll(h EventHub, v *vim.Nvim) error {

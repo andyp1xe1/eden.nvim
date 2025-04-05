@@ -103,6 +103,7 @@ func (a *AppView) loadDom() {
 <body>
 <main>%s</main>
 <script>%s</script>
+<!--<footer><a href="__prev">previous</a></footer>-->
 </body>
 </html>`, style, <-a.chans.docChangedCh, wikiEventListeners))
 
