@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"strings"
 
@@ -19,6 +20,16 @@ type EventHub interface {
 type Plugin interface {
 	Serve() error
 	Vim() *vim.Nvim
+}
+
+type fileServer struct {
+	*http.ServeMux
+}
+
+func newFileServer() *fileServer {
+	server := http.NewServeMux()
+	server.Handle("/", http.FileServer(http.Dir(".")))
+	return &fileServer{server}
 }
 
 type PluginServer struct {
@@ -38,6 +49,14 @@ func MakeServer(hub EventHub) *PluginServer {
 
 func (s PluginServer) Serve() {
 	var err error
+
+	go func() {
+		fs := newFileServer()
+		if err := http.ListenAndServe(":"+port, fs); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
 	if s.plugin, err = nvim.Setup(nvim.Conf{
 		Name: Name,
 		Handlers: nvim.HandlerMap{

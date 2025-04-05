@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark-meta"
@@ -83,7 +84,12 @@ func parseLines(lines [][]byte) string {
 	if tags, ok := metadata["tags"]; ok {
 		front += fmtTags(tags)
 	}
-	return front + "\n" + prevHeader + "\n" + htmlBuf.String()
+	return front + "\n" + prevHeader + "\n" + addPortToImages(htmlBuf.String(), port)
+}
+
+func addPortToImages(html string, port string) string {
+	re := regexp.MustCompile(`<img src="\.?(/[^"]*)"`)
+	return re.ReplaceAllString(html, `<img src="http://localhost:`+port+`$1"`)
 }
 
 func fmtTitle(title interface{}) string {

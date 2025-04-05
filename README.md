@@ -57,7 +57,7 @@ use {
 - [x] css styling
 - [x] yaml frontmatter support (title and tags)
 - [x] two way sync (e.g. navigating wikilinks on the preview opens note in nvim)
-- [ ] access to offline media (images, etc)
+- [x] access to offline media (images, etc) (works, but handles paths unsafely)
 - [ ] obsidian callouts
 - [ ] latex support
 - [ ] lua configuration options (custom styling and behavior) + external css support
