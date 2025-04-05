@@ -1,6 +1,7 @@
 # eden.nvim
 
-A makrdown previewer for your digital garden. *In neovim ofcourse.*
+A makrdown previewer for your digital garden.  
+*neovim btw*.
 
 ## Installation
 
@@ -10,18 +11,6 @@ A makrdown previewer for your digital garden. *In neovim ofcourse.*
 ```sh
 export GOPATH=$HOME/go # you may change this path
 export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-```
-
-### packer
-
-```lua
-use {
-  'andyp1xe1/eden.nvim',
-  run = "make",
-  config = function()
-    require 'eden'.setup()
-  end
-}
 ```
 
 ### lazy
@@ -35,6 +24,20 @@ use {
   end
 }
 ```
+
+### packer (deprecated?)
+
+```lua
+use {
+  'andyp1xe1/eden.nvim',
+  run = "make",
+  config = function()
+    require 'eden'.setup()
+  end
+}
+```
+
+
 
 ### others
 
@@ -54,11 +57,11 @@ use {
 - [x] live html updating
 - [x] css styling
 - [x] yaml frontmatter support (title and tags)
+- [x] two way sync (e.g. navigating wikilinks on the preview opens note in nvim)
 - [ ] access to offline media (images, etc)
 - [ ] obsidian callouts
 - [ ] latex support
 - [ ] lua configuration options (custom styling and behavior)
-- [ ] two way sync (e.g. navigating links on the preview opens note in nvim)
 - [ ] markdown formatter (something that uses goldmark)
 
 --- 

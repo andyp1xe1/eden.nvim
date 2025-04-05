@@ -15,35 +15,30 @@ type Conf struct {
 	Handlers HandlerMap
 }
 
-type NvimPlugin interface {
-	Serve() error
-	Vim() *vim.Nvim
-}
-
-type nvimPlugin struct {
+type NvimPlugin struct {
 	*vim.Nvim
 	conf Conf
 }
 
-func (p *nvimPlugin) Vim() *vim.Nvim {
+func (p *NvimPlugin) Vim() *vim.Nvim {
 	return p.Nvim
 }
 
-func Setup(c Conf) (NvimPlugin, error) {
+func Setup(c Conf) (*NvimPlugin, error) {
 	v, err := newStdio(log.Printf)
 	if err != nil {
 		return nil, err
 	}
-	plugin := &nvimPlugin{v, c}
+	plugin := &NvimPlugin{v, c}
 	plugin.registerHandlers()
 	return plugin, nil
 }
 
-func (np *nvimPlugin) Serve() error {
+func (np *NvimPlugin) Serve() error {
 	return np.Nvim.Serve()
 }
 
-func (p *nvimPlugin) registerHandlers() {
+func (p *NvimPlugin) registerHandlers() {
 	for name, fun := range p.conf.Handlers {
 		p.RegisterHandler(name, fun)
 	}
