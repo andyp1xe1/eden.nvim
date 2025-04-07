@@ -3,12 +3,15 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"regexp"
+	"strings"
 
 	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark-meta"
+	meta "github.com/yuin/goldmark-meta"
+	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/text"
+	"github.com/yuin/goldmark/util"
 	"go.abhg.dev/goldmark/wikilink"
 
 	chromahtml "github.com/alecthomas/chroma/v2/formatters/html"
@@ -61,8 +64,17 @@ func parseLines(lines [][]byte) string {
 		),
 		goldmark.WithParserOptions(
 			parser.WithAutoHeadingID(),
-		),
-	)
+			parser.WithASTTransformers(
+				util.PrioritizedValue{
+					Value:    &KrokiTransformer{},
+					Priority: 200,
+				},
+				util.PrioritizedValue{
+					Value:    &LocalImageTransformer{Port: "6969"},
+					Priority: 100,
+				},
+			),
+		))
 
 	ctx := parser.NewContext()
 
@@ -84,13 +96,95 @@ func parseLines(lines [][]byte) string {
 	if tags, ok := metadata["tags"]; ok {
 		front += fmtTags(tags)
 	}
-	return front + "\n" + prevHeader + "\n" + addPortToImages(htmlBuf.String(), port)
+	return front + "\n" + prevHeader + "\n" + htmlBuf.String()
 }
 
-func addPortToImages(html string, port string) string {
-	re := regexp.MustCompile(`<img src="\.?(/[^"]*)"`)
-	return re.ReplaceAllString(html, `<img src="http://localhost:`+port+`$1"`)
+var diagramTypes = map[string]string{
+	"dot":      "graphviz",
+	"graphviz": "graphviz",
+	"mermaid":  "mermaid",
+	"plantuml": "plantuml",
+	"puml":     "plantuml",
 }
+
+func allDiagramTypesRe() string {
+	var types []string
+	for k := range diagramTypes {
+		types = append(types, k)
+	}
+	return strings.Join(types, "|")
+}
+
+type KrokiTransformer struct{}
+
+func (KrokiTransformer) Transform(doc *ast.Document, reader text.Reader, pc parser.Context) {
+	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if !entering || n.Kind() != ast.KindFencedCodeBlock {
+			return ast.WalkContinue, nil
+		}
+
+		block := n.(*ast.FencedCodeBlock)
+		lang := string(block.Language(reader.Source()))
+
+		dtype, ok := diagramTypes[lang]
+		if !ok {
+			return ast.WalkContinue, nil
+		}
+
+		content := block.Lines().Value(reader.Source())
+		url, err := makeURL([]byte(dtype), []byte("svg"), content)
+		if err != nil {
+			return ast.WalkContinue, err
+		}
+
+		link := ast.NewLink()
+		link.Destination = url
+		link.Title = []byte(dtype + " diagram")
+		img := ast.NewImage(link)
+
+		block.Parent().ReplaceChild(block.Parent(), block, img)
+
+		return ast.WalkSkipChildren, nil
+	})
+}
+
+type LocalImageTransformer struct {
+	Port string
+}
+
+func (t *LocalImageTransformer) Transform(doc *ast.Document, reader text.Reader, pc parser.Context) {
+	// Visit all nodes in the AST
+	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if !entering {
+			return ast.WalkContinue, nil
+		}
+
+		if n.Kind() != ast.KindImage {
+			return ast.WalkContinue, nil
+		}
+
+		image := n.(*ast.Image)
+		destURL := string(image.Destination)
+
+		if !strings.HasPrefix(destURL, "/") && !strings.HasPrefix(destURL, "./") {
+			return ast.WalkContinue, nil
+		}
+
+		if strings.HasPrefix(destURL, "./") {
+			destURL = destURL[1:]
+		}
+
+		newURL := fmt.Sprintf("http://localhost:%s%s", t.Port, destURL)
+		image.Destination = []byte(newURL)
+
+		return ast.WalkContinue, nil
+	})
+}
+
+// func addPortToImages(html string, port string) string {
+// 	re := regexp.MustCompile(`<img src="\.?(/[^"]*)"`)
+// 	return re.ReplaceAllString(html, `<img src="http://localhost:`+port+`$1"`)
+// }
 
 func fmtTitle(title interface{}) string {
 	var html string
