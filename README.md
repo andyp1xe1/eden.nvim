@@ -58,14 +58,18 @@ use {
 - [x] yaml frontmatter support (title and tags)
 - [x] two way sync (e.g. navigating wikilinks on the preview opens note in nvim)
 - [x] access to offline media (images, etc) (works, but handles paths unsafely)
-- [ ] obsidian callouts
+- [x] mermaid, plantuml and graphviz graphs via kroki servivce + ast transformer
 - [ ] latex support (katex? some solution so the rendering is fast while typing)
+- [ ] polish css
+- [ ] obsidian callouts (via goldmark extension/ast transformer)
 - [ ] lua configuration options (custom styling and behavior) + external css support
-- [ ] markdown formatter (something that uses goldmark)
-- [ ] obsidian like graph mode using [force-graph](https://github.com/vasturiano/force-graph)
+- [ ] completely factor out / abstract away rendering in a goldmark based module
+      (so it is easier to swap out the renderer for a native UI implementation)
+- [ ] obsidian like graph mode using [force-graph](https://github.com/vasturiano/force-graph) in case of web rendering, some other way for future native rendering
 
 --- 
 
 ## Alternatives
 
 - https://github.com/toppair/peek.nvim
+
