@@ -5,6 +5,12 @@ A makrdown previewer for your digital garden.
 
 ## Installation
 
+
+### Requirements
+
+At the moment, this is a manual process.
+I may make a complementary AUR package in the future.
+
 - install `webkit2gtk` with your package manager
 - have go installed
 - configure the path so binary is recognized (in `.bashrc` or similar)

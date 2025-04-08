@@ -18,8 +18,7 @@ import (
 	highlighting "github.com/yuin/goldmark-highlighting/v2"
 )
 
-// TODO:
-// - [ ] insdead of appending html make an extension for goldmark?
+// TODO: move this to a separate package
 
 type plainResolver struct{}
 
@@ -153,7 +152,6 @@ type LocalImageTransformer struct {
 }
 
 func (t *LocalImageTransformer) Transform(doc *ast.Document, reader text.Reader, pc parser.Context) {
-	// Visit all nodes in the AST
 	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering {
 			return ast.WalkContinue, nil
@@ -185,6 +183,9 @@ func (t *LocalImageTransformer) Transform(doc *ast.Document, reader text.Reader,
 // 	re := regexp.MustCompile(`<img src="\.?(/[^"]*)"`)
 // 	return re.ReplaceAllString(html, `<img src="http://localhost:`+port+`$1"`)
 // }
+
+// TODO:
+// - [ ] insdead of appending html make an extension for goldmark?
 
 func fmtTitle(title interface{}) string {
 	var html string
