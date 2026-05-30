@@ -87,10 +87,7 @@ func (a *AppView) Run() {
 		}
 	}()
 
-	// Show the window hidden under nvim jobstart; see #2. No-op off Windows.
-	a.Dispatch(func() {
-		a.showWindow()
-	})
+	a.setup()
 
 	a.WebView.Run()
 }

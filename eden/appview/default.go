@@ -2,4 +2,5 @@
 
 package appview
 
-func (a *AppView) showWindow() {}
+// setup performs platform-specific initialization; nothing needed here yet.
+func (a *AppView) setup() {}

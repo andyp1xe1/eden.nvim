@@ -12,12 +12,14 @@ var (
 
 const swShow = 5
 
-// showWindow re-shows the window hidden under nvim jobstart; see #2.
-func (a *AppView) showWindow() {
-	hwnd := a.Window()
-	if hwnd == nil {
-		return
-	}
-	procShowWindow.Call(uintptr(hwnd), swShow)
-	procSetForegroundWin.Call(uintptr(hwnd))
+// setup re-shows the window hidden under nvim jobstart; see #2.
+func (a *AppView) setup() {
+	a.Dispatch(func() {
+		hwnd := a.Window()
+		if hwnd == nil {
+			return
+		}
+		procShowWindow.Call(uintptr(hwnd), swShow)
+		procSetForegroundWin.Call(uintptr(hwnd))
+	})
 }
