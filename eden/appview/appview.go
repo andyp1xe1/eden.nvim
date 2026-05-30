@@ -87,8 +87,7 @@ func (a *AppView) Run() {
 		}
 	}()
 
-	// Force the window visible: Neovim's jobstart() starts us with SW_HIDE,
-	// which suppresses webview's initial ShowWindow. No-op off Windows.
+	// Show the window hidden under nvim jobstart; see #2. No-op off Windows.
 	a.Dispatch(func() {
 		a.showWindow()
 	})
