@@ -87,6 +87,8 @@ func (a *AppView) Run() {
 		}
 	}()
 
+	a.setup()
+
 	a.WebView.Run()
 }
 
